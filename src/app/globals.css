@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+
+html, body { background: #0b1324; }
+body {
+  color: #e6ebf3;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Keyboard focus: visible, high contrast, never removed */
+:focus-visible { outline: 2px solid #ff7a1a; outline-offset: 2px; border-radius: 6px; }
+
+/* Railway sleeper ticks - the signature motif used for dividers and bars */
+.sleepers {
+  background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 14px);
+}
+.tabular { font-variant-numeric: tabular-nums; }
+
+.skeleton { position: relative; overflow: hidden; background: #16233c; border-radius: 8px; }
+.skeleton::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  animation: shimmer 1.6s infinite; transform: translateX(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+.recharts-default-tooltip { border-radius: 10px !important; }
