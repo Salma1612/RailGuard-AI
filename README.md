@@ -1,153 +1,225 @@
-# RailGuard AI — AI-Powered Railway Track Inspection
 
-Classifies a railway-track photo as **Broken Track, Loose Bolts, Missing Parts, Rust or Normal Track** using your two
-trained CNNs (**EfficientNetB0** and **MobileNetV2**). It is **one Next.js application deployed on Vercel** — no separate
-backend, no paid hosting, no environment variables.
+# 🚆 RailGuard AI — Railway Track Defect Detection
 
-> **Status:** built and tested locally (see [Verification](#verification-what-was-actually-run)). It has **not** been deployed to
-> Vercel from here, because I have no access to your Vercel account. Follow [Deploy on Vercel](#deploy-on-vercel); it is a
-> three-click import.
+### AI-Powered Railway Track Inspection Using Deep Learning
 
-## How it works (and why it is built this way)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-red?logo=streamlit)](https://railguard-ai-capestone.streamlit.app/)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/Deep%20Learning-PyTorch-orange?logo=pytorch)](https://pytorch.org/)
+[![Streamlit](https://img.shields.io/badge/Interface-Streamlit-FF4B4B?logo=streamlit)](https://streamlit.io/)
 
-Vercel's current limits for Functions (Vercel docs, *Functions Limits*, updated 2026-08-24): **2 GB RAM / 1 vCPU on Hobby, 300 s max
-duration, 250 MB bundle size (500 MB for Python) and a hard 4.5 MB request/response body**.
+**RailGuard AI** is a deep learning-based railway track inspection project designed to classify railway track images into five categories. It uses trained convolutional neural network models to support the identification of potential track defects from uploaded images.
 
-* PyTorch alone is larger than the Python bundle limit, so the previous FastAPI + PyTorch backend **cannot run on Vercel**
-  (that is why the old `pyproject.toml` / Render setup could not work as one deployment).
-* The 4.5 MB body limit would also reject many phone photos if images were uploaded to a function.
+🌐 **Live Application:**  
+### 👉 [Launch RailGuard AI](https://railguard-ai-capestone.streamlit.app/)
 
-So the models now run **in the visitor's browser**:
+---
 
-```
-your .pt checkpoints ──(scripts/export_onnx.py, parity-checked)──▶ public/models/*.onnx   (static files on Vercel's CDN)
-                                                                    │
-browser: image ─▶ decode ─▶ Pillow-exact bilinear resize 224×224 ─▶ normalise ─▶ ONNX Runtime Web (WASM) ─▶ softmax ─▶ UI
-```
+## 📌 Project Overview
 
-* The **same trained weights**, class order (`Broken Track, Loose Bolts, Missing Parts, Rust, Normal Track`), image size (224) and
-  ImageNet mean/std are read from your checkpoints and stored in `public/models/manifest.json`. Nothing is simulated.
-* Preprocessing in `src/lib/preprocess.ts` is a bit-exact port of Pillow's bilinear resize (the one `torchvision.transforms.Resize`
-  used in training). Browser canvas scaling is *not* equivalent, so it was not used.
-* Photos **never leave the device** (good for privacy; no upload size limit).
-* The model (17.3 MB EfficientNetB0, 10.2 MB MobileNetV2) is downloaded on first use only, integrity-checked with SHA-256 and cached by the browser.
+Railway track inspection is essential for maintaining railway infrastructure and identifying potential defects. RailGuard AI explores how computer vision and deep learning can assist with railway track condition classification.
 
-## Model results
+Users can upload a railway track image through the Streamlit application and select one of two trained models to obtain a predicted class and confidence scores.
 
-| Model | Test accuracy | Test macro F1 | Validation acc. | Validation macro F1 | Browser model size |
-|---|---:|---:|---:|---:|---:|
-| **EfficientNetB0** (preferred) | 93.64% | 0.8836 | 90.99% | 0.8266 | 17.3 MB |
-| MobileNetV2 | 92.27% | 0.8572 | 89.64% | 0.8294 | 10.2 MB |
+The application also flags predictions with low confidence to encourage further inspection.
 
-* **Test** figures are the ones you reported. The evaluation files (`artifacts/metrics.json`) are not in the repository, so I could
-  not recompute them. They live in `src/data/reported-metrics.ts` — update that file if you retrain.
-* **Validation** figures are read from inside your checkpoints (used to pick the best epoch); they are *not* test results.
-* Both models were trained on the same split (identical split fingerprint inside the checkpoints), so the comparison is like-for-like.
+## 🎯 Objectives
 
-## What changed from the previous repository
+- Classify railway track images into five categories.
+- Apply deep learning models to railway track image analysis.
+- Compare MobileNetV2 and EfficientNetB0 for image classification.
+- Display prediction confidence and alternative class scores.
+- Provide a simple, interactive interface for image-based inference.
+- Encourage further inspection when a prediction is uncertain.
 
-| Change | Why |
+## 🧠 Defect Categories
+
+The application supports the following five classes:
+
+| Category | Description |
 |---|---|
-| App moved from `frontend/` to the **repository root**; one Next.js app | Vercel deploys it with no "Root Directory" setting |
-| Removed `backend/` (FastAPI), `Dockerfile`, `render.yaml`, `pyproject.toml`, `.env.example`, `tests/test_api.py`, `scripts/download_models.py` | They only served the separate backend; `pyproject.toml`'s `[tool.vercel]` entry would make Vercel try to build PyTorch |
-| Removed **Dataset Explorer, Analytics, History, Compare** pages | They needed a server (database, dataset folder, evaluation artifacts) that does not exist on Vercel. Showing them with fake data was ruled out. |
-| `*.pt` files moved from the repo root to `models/` | The code (`railguard/config.py`, scripts) expects them there |
-| Added `scripts/export_onnx.py`, ONNX files, `src/lib/preprocess.ts`, `src/lib/inference.ts` | Browser inference |
-| Kept `railguard/`, `scripts/` (train / evaluate / prepare_data), `configs/`, `tests/` | You can still retrain and evaluate in Python |
+| Broken Track | Images classified as showing a broken or damaged track |
+| Loose Bolts | Images classified as showing loose track fasteners |
+| Missing Parts | Images classified as showing missing track components |
+| Rust | Images classified as showing rust or corrosion |
+| Normal Track | Images classified as normal track without an identified defect |
 
-The old server code is still in the git history if you ever want it back.
+## 🤖 Deep Learning Models
 
-## Repository layout
+RailGuard AI includes two trained image classification models:
 
+### 1. MobileNetV2
+A lightweight convolutional neural network architecture suitable for image classification applications where computational efficiency is important.
+
+### 2. EfficientNetB0
+A convolutional neural network architecture designed to balance model accuracy and computational efficiency.
+
+Users can select either model from the application interface.
+
+## ✨ Key Features
+
+- **Image Upload:** Upload railway track images in JPG, JPEG, or PNG format.
+- **Two Model Options:** Choose MobileNetV2 or EfficientNetB0.
+- **Automated Classification:** Predict one of the five supported categories.
+- **Confidence Scores:** View the model's confidence for the predicted class.
+- **Top-3 Predictions:** Review the three highest-scoring class predictions.
+- **Class Probability Scores:** Explore scores for all supported classes.
+- **Low-Confidence Warning:** Flag uncertain predictions for additional review.
+- **Interactive Web Interface:** Use the application through Streamlit.
+
+## 🛠️ Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Python | Core programming language |
+| PyTorch | Deep learning inference |
+| Torchvision | Image transformation and model utilities |
+| Pillow | Image loading and preprocessing |
+| NumPy | Numerical operations |
+| Streamlit | Interactive web application |
+| Git and GitHub | Version control and source code hosting |
+| Streamlit Community Cloud | Application deployment |
+
+## 🏗️ Project Structure
+
+```text
+RailGuard-AI/
+│
+├── app.py
+├── requirements.txt
+│
+├── railguard/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── data.py
+│   ├── metrics.py
+│   ├── models.py
+│   └── predict.py
+│
+├── models/
+│   ├── mobilenet_v2_best.pt
+│   └── efficientnet_b0_best.pt
+│
+├── public/
+│   └── models/
+│
+├── scripts/
+├── configs/
+├── tests/
+├── docs/
+│
+└── README.md
 ```
-├── src/app, src/components, src/lib   Next.js UI + browser inference
-├── public/models/                     *.onnx + manifest.json (generated by export_onnx.py, committed)
-├── public/ort/                        ONNX Runtime WASM (copied from node_modules at build time; not committed)
-├── models/*.pt                        your trained PyTorch checkpoints (source of truth)
-├── railguard/, scripts/, configs/     Python: data pipeline, training, evaluation, ONNX export
-├── tests/                             Python tests (data leakage, metrics)
-├── vercel.json, .vercelignore         Vercel configuration
-└── package.json                       Node dependencies (Next.js, React, Tailwind, ONNX Runtime Web, lucide-react)
-```
 
-## Run locally (Windows PowerShell)
+*Note: The structure above highlights the main application, model, and supporting directories. Additional files may be present in the repository.*
 
-Requires **Node.js 22.18+** (or newer) and Git. Python is only needed if you retrain/re-export.
+## ⚙️ Installation and Setup
 
-```powershell
+### Prerequisites
+
+- Python 3.11 or 3.12
+- pip
+- Git
+
+### 1. Clone the repository
+
+```bash
 git clone https://github.com/Salma1612/RailGuard-AI.git
 cd RailGuard-AI
-npm ci
-npm run dev          # http://localhost:3000
 ```
 
-Production check (same as Vercel):
+### 2. Create a virtual environment
 
-```powershell
-npm run build
-npm run start        # http://localhost:3000
+**Windows:**
+
+```bash
+python -m venv venv
+venv\Scripts\activate
 ```
 
-Other checks: `npm run lint`, `npm run typecheck`, `npm test` (verifies the resize port against real Pillow output).
+**macOS / Linux:**
 
-## Deploy on Vercel
-
-1. Push this repository to GitHub (see commands below).
-2. Go to <https://vercel.com/new>, sign in with GitHub, **Import** `Salma1612/RailGuard-AI`.
-3. Leave everything on defaults — Framework **Next.js** is auto-detected, Root Directory is the repo root, **no environment variables**.
-   (`vercel.json` already sets `npm ci` / `npm run build`.) Click **Deploy**.
-4. Open the URL, upload a photo, press **Analyze Track**. The first analysis downloads the model; later ones are instant.
-
-```powershell
-git add -A
-git commit -m "Unify as a single Vercel app with in-browser ONNX inference"
-git push origin main
+```bash
+python3 -m venv venv
+source venv/bin/activate
 ```
 
-Vercel's free Hobby plan is intended for personal, non-commercial projects; check Vercel's current terms and bandwidth quota if you
-expect heavy traffic (each new visitor downloads up to ~30 MB of model + runtime files once).
+### 3. Install dependencies
 
-## Updating or retraining the models
-
-```powershell
-py -3.12 -m venv .venv ; .\.venv\Scripts\Activate.ps1
-pip install -r requirements-dev.txt
-python -m scripts.prepare_data                 # needs your images in data/raw/<Class>/
-python -m scripts.train --model all
-python -m scripts.evaluate                     # writes artifacts/*.json; copy the test numbers into src/data/reported-metrics.ts
-python -m scripts.export_onnx                  # regenerates public/models/*.onnx + manifest.json and checks parity with PyTorch
-git add models public/models src/data ; git commit -m "Update models" ; git push
+```bash
+pip install -r requirements.txt
 ```
 
-`export_onnx.py` aborts if the ONNX output differs from PyTorch. File names contain a content hash, so browsers never serve a stale model.
+### 4. Run the Streamlit application
 
-## Limitations
+```bash
+streamlit run app.py
+```
 
-* **Single-label classification.** One photo → one category, but a track section can show several defects (e.g. rust *and* a loose bolt).
-* **Whole-image classification.** Defects are not located; small defects in a wide photo can be missed.
-* **No out-of-distribution detection.** The model always picks one of the five classes, even for a photo that is not a railway track
-  (during testing, MobileNetV2 gave one non-railway photo a 73% "Rust" score). The low-confidence warning (confidence < 60% or top-2 gap < 10 pts)
-  does not catch such cases. Confidence is not a calibrated probability.
-* **"Normal Track" ≠ safe.** It means no defect was recognised. This is decision support, not a certified safety system.
-* **Reported test metrics** come from one held-out test set and were not independently recomputed here; field performance is unvalidated.
-* **Runs on the user's device:** needs a modern browser with WebAssembly; the first analysis downloads 12 MB runtime + 10–17 MB model;
-  analysis takes ≈0.4 s per model on a desktop (measured in headless Chrome), longer on phones; a 12-megapixel photo took ≈3.6 s for both models.
-  Images above 40 megapixels or 20 MB are rejected to protect phone memory. Single-threaded WASM is used because multi-threading needs special headers.
-* Tiny numeric differences versus Python are possible for PNGs with transparency or embedded colour profiles (the browser decodes them slightly differently from Pillow).
+The application will open in your browser. If it does not open automatically, use the local URL displayed in the terminal.
 
-## Verification: what was actually run
+## 📊 Model Inference Workflow
 
-Linux sandbox, Node 22, Python 3.12, headless Chrome 131:
+1. Open the RailGuard AI application.
+2. Upload a railway track image.
+3. Select MobileNetV2 or EfficientNetB0.
+4. Click **Analyze Track**.
+5. View the predicted class and confidence score.
+6. Review the top-three predictions and class scores.
+7. Follow the warning if the prediction has low confidence.
 
-| Check | Result |
-|---|---|
-| ONNX export vs PyTorch (9 inputs per model) | max probability diff 8.0e-7 (MobileNetV2), 3.6e-7 (EfficientNetB0); identical argmax on all |
-| `npm test`: TypeScript resize vs **real Pillow 12.1.1** output (5 cases incl. up/down-scale, RGBA) | 7 passed, **0 pixel difference** |
-| **End-to-end in Chrome** against the built site: 9 images (JPG, PNG, grayscale, EXIF-rotated, 12 MP) × both models vs original `railguard.predict.Predictor` | **0 class mismatches; max confidence difference 0.05 pp (display rounding)** |
-| Error handling: `.txt`, `.gif`, renamed non-image `.jpg`, truncated JPEG | clear message for each; no console errors |
-| `npm ci` → `npm run lint` → `tsc --noEmit` → `npm run build` from a clean tree | all passed |
-| `pytest` (data leakage, metrics) | 9 passed |
-| Mobile viewport (390 px) | no horizontal scroll; layout verified by screenshot |
+## 🔍 Prediction and Confidence
 
-**Not verified:** an actual Vercel deployment/build, behaviour on real iOS Safari / Android devices, and the model's accuracy on
-railway photos (the test images above were not railway images — they test numerical fidelity only, not accuracy).
+The application uses the selected trained checkpoint to generate class scores. It applies softmax to produce scores that sum to one across the supported classes.
+
+The application displays:
+- Predicted class
+- Top-1 confidence score
+- Top-three class predictions
+- Scores for all classes
+- Inference time
+- Low-confidence warning, when applicable
+
+**Important:** Softmax scores are not necessarily calibrated probabilities. A high score does not guarantee that a prediction is correct.
+
+## 🚀 Deployment
+
+RailGuard AI is deployed using Streamlit Community Cloud.
+
+🌐 **Live Demo:** [https://railguard-ai-capestone.streamlit.app/](https://railguard-ai-capestone.streamlit.app/)
+
+The application source code and trained model checkpoints are maintained in this GitHub repository.
+
+## 🔮 Future Enhancements
+
+- Expand the dataset with more diverse railway track images.
+- Evaluate model performance across different lighting and weather conditions.
+- Improve defect localization and visual explanations.
+- Add model comparison and evaluation dashboards.
+- Explore deployment options for edge devices and railway inspection systems.
+- Improve robustness and validation on real-world railway images.
+
+## ⚠️ Limitations and Safety Disclaimer
+
+RailGuard AI is an educational and research prototype for image classification. Its predictions may be affected by image quality, lighting, camera angle, dataset limitations, and differences between training images and real-world conditions.
+
+It must **not** be used as the sole basis for railway safety decisions. Suspected defects require inspection by qualified railway personnel using appropriate inspection procedures.
+
+## 👩‍💻 Author
+
+**Shaik Salma**
+
+B.Tech — Computer Science and Engineering  
+Specialization: Artificial Intelligence and Machine Learning  
+VIT-AP University
+
+### 🔗 Project Links
+
+- **Live Application:** [RailGuard AI on Streamlit](https://railguard-ai-capestone.streamlit.app/)
+- **GitHub Repository:** [Salma1612/RailGuard-AI](https://github.com/Salma1612/RailGuard-AI)
+
+---
+
+⭐ If you find this project interesting, consider starring the repository on GitHub.
+
+**RailGuard AI — Exploring safer railway infrastructure through AI-powered image classification.**
