@@ -1,0 +1,12 @@
+# Python dependencies for TRAINING, EVALUATION and ONNX EXPORT only.
+# The deployed website (Vercel) does not use Python at all.
+# Versions are the ones this project was verified with (Python 3.12; 3.11 also works).
+torch==2.14.1
+torchvision==0.29.1
+numpy==2.4.4
+pillow==12.1.1
+scikit-learn==1.8.0
+PyYAML==6.0.3
+# ONNX export (scripts/export_onnx.py)
+onnx==1.23.2
+onnxruntime==1.24.4
