@@ -185,6 +185,7 @@ The application displays:
 ## 🚀 Deployment
 
 RailGuard AI is deployed using Streamlit Community Cloud.
+![Uploading image.png…]()
 
 🌐 **Live Demo:** [https://railguard-ai-capestone.streamlit.app/](https://railguard-ai-capestone.streamlit.app/)
 
